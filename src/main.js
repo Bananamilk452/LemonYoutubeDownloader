@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faLink, faSearch, faSlidersH } from '@fortawesome/free-solid-svg-icons';
+import {
+  faLink, faSearch, faSlidersH, faRedoAlt,
+} from '@fortawesome/free-solid-svg-icons';
 import { faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import App from './App.vue';
@@ -10,6 +12,7 @@ import store from './store';
 library.add(faLink);
 library.add(faSearch);
 library.add(faSlidersH);
+library.add(faRedoAlt);
 library.add(faYoutube);
 
 Vue.component('icon', FontAwesomeIcon);

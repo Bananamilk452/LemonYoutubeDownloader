@@ -2,15 +2,30 @@
 import { app, protocol, BrowserWindow } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import './ipc';
-import path from 'path';
+import { join } from 'path';
+import { autoUpdater } from 'electron-updater';
+import logger from 'electron-log';
+import ipcInit from './ipc';
+import initInstallScript from './install';
 
+// #region Initial Setting
 const isDevelopment = process.env.NODE_ENV !== 'production';
+// 알림에 이름 제대로 표시하기 위해서 vue.config.js에 명시된 ID와 같이 맞추기
+app.setAppUserModelId('com.lemonyoutubedownloader.app');
+// console 객체를 electron-log로 대체
+Object.assign(console, logger.functions);
+logger.transports.console.format = '{h}:{i}:{s} {text}';
+logger.transports.file.getFile().clear();
+// autoUpdater 로그 기록
+autoUpdater.logger = logger;
+autoUpdater.logger.transports.file.level = 'info';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ]);
+
+// #endregion
 
 async function createWindow() {
   // Create the browser window.
@@ -26,9 +41,12 @@ async function createWindow() {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       enableRemoteModule: false, // turn off remote
-      preload: path.join(__dirname, 'preload.js'), // use a preload script
+      preload: join(__dirname, 'preload.js'), // use a preload script
     },
   });
+
+  ipcInit(win);
+  initInstallScript(win);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -38,6 +56,10 @@ async function createWindow() {
     createProtocol('app');
     // Load the index.html when not in development
     win.loadURL('app://./index.html');
+    autoUpdater.checkForUpdatesAndNotify({
+      title: '새 업데이트 설치가 준비되었습니다.',
+      body: '{appName} 버전 {version}이 다운로드되었으며 앱 종료 시에 자동으로 설치됩니다.',
+    });
   }
 }
 

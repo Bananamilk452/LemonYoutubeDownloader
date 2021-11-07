@@ -10,6 +10,7 @@ export default {
     };
   },
   created() {
+    document.title = '유튜브에서 영상 검색';
     this.$ipcRenderer.on('search data', (data) => {
       this.isLoading = false;
       this.data = data;
@@ -45,6 +46,10 @@ export default {
         this.$ipcRenderer.send('search', this.searchinput);
       }
     },
+    goToDirectDownload(id) {
+      window.resizeTo(700, 500);
+      this.$router.replace({ name: 'Direct', params: { id } });
+    },
   },
 };
 </script>
@@ -59,7 +64,7 @@ export default {
   .search-first(v-if="first") 원하는 영상을 검색한 후 다운로드 할 영상을 선택해주세요!
   #searchresult(v-if="!isLoading")
     .search-result-title "{{ data.correctedQuery }}" 검색결과 -  다운로드 할 영상 선택
-    .search-card(v-for="v in data.items" :key="v.id")
+    .search-card(v-for="v in data.items" :key="v.id" @click="goToDirectDownload(v.id)")
       .search-image
         img.search-thumbnail(:src="v.bestThumbnail.url")
         .search-thumbnail-time {{ v.duration }}
@@ -168,8 +173,8 @@ export default {
     flex-direction: column;
     margin-left: 12px;
     height: 100%;
-    justify-content: space-between;
-
+    width: 100%;
+    justify-content: center;
   }
 
   &title {

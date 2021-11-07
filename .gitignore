@@ -1,7 +1,16 @@
 .DS_Store
 node_modules
 /dist
+/test
+/temp
+/bin/*
+!/bin/DO_NOT_REMOVE_THIS_DIRECTORY.txt
 
+.yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
 
 # local env files
 .env.local

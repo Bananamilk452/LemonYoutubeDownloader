@@ -1,15 +1,20 @@
 <script>
 export default {
   name: 'Navbar',
+  methods: {
+    openWindow(path, width, height) {
+      window.open(`#/${path}`, path, `width=${width},height=${height}`);
+    },
+  },
 };
 </script>
 
 <template lang="pug">
 #navbar
-  .navbar-item
+  .navbar-item(@click="openWindow('download', 700, 500)")
     icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
     .navbar-title 링크 분석
-  .navbar-item
+  .navbar-item(@click="openWindow('search', 500, 800)")
     icon(icon="search")
     .navbar-title 영상 검색
   div(style="flex-grow: 1")
