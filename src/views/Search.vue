@@ -104,11 +104,7 @@ export default {
 
 .search- {
   &input {
-    border: 1px solid rgb(197, 197, 197);
-    border-radius: 4px;
-    padding: 8px;
     width: 50%;
-    margin: 0 8px;
   }
 
   &button {

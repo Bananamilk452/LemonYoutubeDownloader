@@ -17,7 +17,7 @@ module.exports = {
         });
       },
       mainProcessFile: 'src/background.js',
-      mainProcessWatch: ['src/ipc.js', 'src/install.js'],
+      mainProcessWatch: ['src/ipc.js', 'src/install.js', 'src/util.js'],
       preload: 'src/preload.js',
       builderOptions: {
         extraFiles: ['./bin/DO_NOT_REMOVE_THIS_DIRECTORY.txt'],

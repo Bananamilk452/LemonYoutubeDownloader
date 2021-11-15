@@ -34,6 +34,13 @@ html, body, #app, #main {
   overflow: hidden;
 }
 
+input {
+  border: 1px solid rgb(197, 197, 197);
+  border-radius: 4px;
+  padding: 8px;
+  margin: 0 8px;
+}
+
 button {
   padding: 8px 12px;
   border-radius: 4px;

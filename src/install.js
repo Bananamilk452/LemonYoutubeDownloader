@@ -79,6 +79,7 @@ async function streamDownload(url, name, savedir) {
 }
 
 async function downloadBinary(status) {
+  // TODO: 동기로 만들기
   if (status.chromium === false) {
     await streamDownload('https://download-chromium.appspot.com/dl/Win_x64', 'Chromium', './bin/chrome-win.zip')
       .then(async () => {

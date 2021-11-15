@@ -31,7 +31,6 @@ export default {
     this.$ipcRenderer.on('download progress', (data) => {
       this.list[this.list.findIndex((x) => x.url === data.url)].progress = data;
     });
-    // TODO: 취소 기능 만들기
     // TODO: 파일 폴더 열기 버튼
   },
   methods: {
@@ -43,6 +42,9 @@ export default {
     parseTime(time) {
       if (time / 60 / 60 >= 1) return `${Math.floor(time / 60 / 60)}:${String(Math.floor((time / 60) % 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`;
       return `${String(Math.floor((time / 60) % 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`;
+    },
+    cancelDownload(data) {
+      if (window.confirm(`${data.info.title.substring(0, 20)}... 의 다운로드를 취소할까요?`)) this.$ipcRenderer.send('download cancel', data);
     },
   },
 };
@@ -64,6 +66,8 @@ export default {
           .search-progress(v-if="data.progress.type === 'progress'")
             progress(:max="data.progress.size" :value="data.progress.current")
             .search-progress-text {{ ((data.progress.current / data.progress.size) * 100).toFixed(1) }}%
+      .search-cancel(@click="cancelDownload(data)" title="취소하기")
+          icon(icon="times")
     | 유튜브 링크를 복사하고 "링크 분석" 버튼을 누르거나 영상 검색 버튼을 눌러서 검색 후 영상을 다운로드하세요!
 .dimmer(v-else)
   p 초기 설치 중입니다. 응답 없음이 30초 이상 뜰 수 있습니다. 잠시만요...
@@ -119,6 +123,11 @@ export default {
       display: inline-block;
       font-weight: 700;
     }
+  }
+
+  &cancel {
+    cursor: pointer;
+    margin-left: 8px;
   }
 }
 </style>

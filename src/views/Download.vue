@@ -15,6 +15,8 @@ export default {
       format: [],
       readyToRender: false,
       fail: false,
+      userFailed: false,
+      userInput: '',
       fastdl: true,
       progress: '클립보드 가져오는 중 & 분석 중...',
       type: 'video',
@@ -22,7 +24,6 @@ export default {
   },
   created() {
     document.title = '영상 다운로드';
-    console.log(this.$route);
     if (this.$route.name === 'Download') this.fetchClipboard();
     else if (this.$route.name === 'Direct') this.directDownload();
 
@@ -46,22 +47,27 @@ export default {
       navigator.clipboard.readText()
         .then(async (res) => {
           this.clipboard = res;
-          // TODO: 뭘 분석하는지 알려주기
           // TODO: 에러나면 따로 넣는 곳 만들기
-          const result = this.youtubeLinkParse(this.clipboard);
-
-          if (result.match) {
-            this.$ipcRenderer.send('getinfo', result.value);
-            this.$ipcRenderer.send('getheadless', result.value);
-            this.progress = '정보 수집 중...';
-          } else {
-            this.progress = `에러가 발생했습니다. 클립보드를 분석할 수 없어요.\n클립보드: ${this.clipboard}`;
-            console.error('링크 분석 불가');
-          }
+          this.processInput(this.clipboard);
         }).catch((e) => {
           console.error(e);
           this.fail = true;
         });
+    },
+    processInput(input) {
+      // TODO: 에러나면 따로 넣는 곳 만들기
+      this.userFailed = false;
+      const result = this.youtubeLinkParse(input);
+
+      if (result.match) {
+        this.$ipcRenderer.send('getinfo', result.value);
+        this.$ipcRenderer.send('getheadless', result.value);
+        this.progress = `정보 수집 중...\n클립보드: ${input}\n파싱한 비디오 ID: ${result.value}`;
+      } else {
+        this.userFailed = true;
+        this.progress = `에러가 발생했습니다. 클립보드를 분석할 수 없어요.\n클립보드: ${input}\n아니면 직접 입력해보시겠어요?`;
+        console.error('링크 분석 불가');
+      }
     },
     directDownload() {
       this.$ipcRenderer.send('getinfo', this.$route.params.id);
@@ -133,12 +139,23 @@ export default {
         button(@click="closeWindow()") 취소
     #loading(v-if="!fail && !readyToRender")
       .ui.text.loader.active.small {{ progress }}
+        .when-user-failed(v-if="userFailed")
+          input(placeholder="유튜브 영상 링크" v-model="userInput")
+          button(@click="processInput(userInput)") 제출
 </template>
 
 <style lang="scss">
 #download {
   width: 100vw;
   height: 100vh;
+}
+
+#loading > .loader {
+  white-space: pre-wrap;
+}
+
+.when-user-failed {
+  margin-top: 8px;
 }
 
 #list {
@@ -163,8 +180,10 @@ export default {
     font-size: 15px;
     text-align: left;
     margin-bottom: 8px;
-    white-space: pre-line;
+    white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
+    height: 30px;
   }
 
   &link {

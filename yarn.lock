@@ -2442,6 +2442,7 @@ __metadata:
     eslint: ^6.7.2
     eslint-plugin-import: ^2.20.2
     eslint-plugin-vue: ^6.2.2
+    flatted: ^3.2.2
     fluent-ffmpeg: ^2.1.2
     multistream: ^4.1.0
     playwright: ^1.16.2
@@ -6652,6 +6653,13 @@ __metadata:
   version: 2.0.2
   resolution: "flatted@npm:2.0.2"
   checksum: 473c754db7a529e125a22057098f1a4c905ba17b8cc269c3acf77352f0ffa6304c851eb75f6a1845f74461f560e635129ca6b0b8a78fb253c65cea4de3d776f2
+  languageName: node
+  linkType: hard
+
+"flatted@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "flatted@npm:3.2.2"
+  checksum: 9d5e03fd9309b9103f345cf6d0cef4fa46201baa053b0ca3d57fa489449b0bee687b7355407898f630afbb1a1286d2a6658e7e77dea3b85c3cd6c6ce2894a5c3
   languageName: node
   linkType: hard
 
