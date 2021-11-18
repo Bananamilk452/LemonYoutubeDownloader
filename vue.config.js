@@ -20,7 +20,7 @@ module.exports = {
       mainProcessWatch: ['src/ipc.js', 'src/install.js', 'src/util.js'],
       preload: 'src/preload.js',
       builderOptions: {
-        extraFiles: ['./bin/DO_NOT_REMOVE_THIS_DIRECTORY.txt'],
+        extraFiles: ['./bin/DO_NOT_REMOVE_THIS_DIRECTORY.txt', './src/downloadVideo.js', './src/downloadAudio.js'],
         appId: 'com.lemonyoutubedownloader.app',
         productName: 'LemonYoutubeDownloader',
         publish: [

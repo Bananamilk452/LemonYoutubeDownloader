@@ -16,5 +16,6 @@ module.exports = {
     'max-len': 'off',
     'import/no-extraneous-dependencies': 'off',
     'no-alert': 'off',
+    'linebreak-style': 'off',
   },
 };

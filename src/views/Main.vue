@@ -69,6 +69,7 @@ export default {
       .search-cancel(@click="cancelDownload(data)" title="취소하기")
           icon(icon="times")
     | 유튜브 링크를 복사하고 "링크 분석" 버튼을 누르거나 영상 검색 버튼을 눌러서 검색 후 영상을 다운로드하세요!
+    | 버그 제보: https://github.com/Bananamilk452/LemonYoutubeDownloader/issues/new
 .dimmer(v-else)
   p 초기 설치 중입니다. 응답 없음이 30초 이상 뜰 수 있습니다. 잠시만요...
   .ui.loader.active.small.text {{ progress.text }}
