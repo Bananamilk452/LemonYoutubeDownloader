@@ -7,7 +7,7 @@
   },
   "homepage": "https://github.com/Bananamilk452/LemonYoutubeDownloader",
   "description": "Fast YouTube downloader using headless browser. Act like real users to trick YouTube.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -29,6 +29,7 @@
     "async-pool": "^0.2.6",
     "axios": "^0.23.0",
     "better-ytsr": "^1.1.0",
+    "copy-webpack-plugin": "6",
     "core-js": "^3.6.5",
     "flatted": "^3.2.2",
     "fluent-ffmpeg": "^2.1.2",
