@@ -1,23 +1,22 @@
 /* eslint-disable no-await-in-loop */
-import { join } from 'path';
-import { ipcMain, Notification, shell } from 'electron';
-import ytsr from 'better-ytsr';
-import { getInfo } from 'ytdl-core';
-import {
-  promises as fs, existsSync,
-} from 'fs';
-import { fork } from 'child_process';
-import { stringify } from 'flatted';
-import {
-  createRandomString, getQualityFromHeadless,
-} from './util';
+const { join } = require('path');
+const { ipcMain, Notification, shell } = require('electron');
+const ytsr = require('better-ytsr');
+const { getInfo } = require('ytdl-core');
+const fs = require('fs').promises;
+const { existsSync } = require('fs');
+const { fork } = require('child_process');
+const { stringify } = require('flatted');
+const {
+  createRandomString, getQualityFromHeadless, getSecretVideoQuality,
+} = require('./util');
 
 let win;
 const working = {};
 
-export default function init(window) {
+module.exports = (window) => {
   win = window;
-}
+};
 
 // TODO: 로그창 만들기
 // TODO: try catch 씌우기
@@ -34,6 +33,10 @@ export default function init(window) {
   }
 })();
 // #endregion
+
+ipcMain.on('openBrowser', async (event, arg) => {
+  shell.openExternal(arg.url);
+});
 
 ipcMain.on('search', async (event, arg) => {
   const data = await ytsr(arg, {
@@ -54,8 +57,8 @@ ipcMain.on('getheadless', async (event, arg) => {
 
 ipcMain.on('download', async (event, arg) => {
   const uuid = createRandomString();
-  if (arg.type === 'video') working[uuid] = fork('./src/downloadVideo.js');
-  else if (arg.type === 'audio') working[uuid] = fork('./src/downloadAudio.js');
+  if (arg.type === 'video') working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadVideo.js' : join(__dirname, 'downloadVideo.js'));
+  else if (arg.type === 'audio') working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadAudio.js' : join(__dirname, 'downloadAudio.js'));
 
   working[uuid].send(stringify({ arg, uuid }));
   working[uuid].on('message', (data) => {
@@ -79,12 +82,16 @@ ipcMain.on('download cancel', async (event, arg) => {
   fs.rm(`./temp/${arg.info.videoId}`, { force: true, recursive: true });
 });
 
+ipcMain.on('test', async (event, arg) => {
+  const a = await getSecretVideoQuality(arg.videoId, 'SID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9ur5c5P2e_JNewNEeL8q4-mw.; __Secure-1PSID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9u1YZJ6KV2H8qamM4umZJBCA.; __Secure-3PSID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9u3ETOUSpWR8TWOMCjlw-JuA.; HSID=AJ-_Ah6kT_0AkMS4d; SSID=AwdP9-e7YXZ1ME-Q5; APISID=Aui1ifv7Jz2doYSJ/AAw8KBk21Nqv9JkmF; SAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; __Secure-1PAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; __Secure-3PAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; SIDCC=AJi4QfFcLw…ecure-3PSIDCC=AJi4QfFNH5R1gAp5yjArk24-OeGOcef6_thGA2dFrh0t9MFJb5d-R71fk3s_7p8rWKGEkmVIz5E; PREF=tz=Asia.Seoul&gl=KR&hl=en; VISITOR_INFO1_LIVE=UVJfhnWi8l8; LOGIN_INFO=AFmmF2swRgIhAPoPkqHIIGLIunodHromWqa6FbjZPpfW8BvSvWRGb-nFAiEAhvF1wikcn0_I2GPMlATbdGEKA1nmtDXjPQLiMTNl8UM:QUQ3MjNmd3VVTWUtQV9DbkhYV1Jmd3o5dU5EQzZlc2w3SGVzdXloQm1mZHkxcUFyUnhZcm1Ta2NSQ0NtSHhPYnhPZ0tVeTNzTEtlZUpuY002bkNmWWhUbnlJTlBVbnhXaGlxVFFEYk41NlhoV2RJekh1blNLNWctbWhLMm9rTUh2T0xnSVd3bjFOTUloZXA3XzJ4REw3Y2hKWUdwZzZfR3lB; YSC=GayRzm6JTOY; wide=0');
+  console.log(a);
+});
+
 // #region downloadVideo
 // async function downloadVideo(arg, uuid) {
 //   return new Promise((resolve, reject, onCancel) => {
 //     (async () => {
 //       try {
-//       // TODO: 리팩토링해서 분류에 맞게 코드 정렬하기
 //         win.webContents.send('download receive', { ...arg, uuid });
 
 //         const videoId = arg.url.match(/.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/)[1];
@@ -185,7 +192,6 @@ ipcMain.on('download cancel', async (event, arg) => {
 //   return new Promise((resolve, reject) => {
 //     (async () => {
 //       try {
-//       // TODO: 리팩토링해서 분류에 맞게 코드 정렬하기
 //         win.webContents.send('download receive', arg);
 
 //         const videoId = arg.url.match(/.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/)[1];

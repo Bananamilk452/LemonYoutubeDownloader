@@ -1,5 +1,5 @@
 <script>
-import Table from '@/components/Table.vue';
+import Table from '../components/Table.vue';
 
 export default {
   name: 'Download',
@@ -22,6 +22,7 @@ export default {
       type: 'video',
     };
   },
+
   created() {
     document.title = '영상 다운로드';
     if (this.$route.name === 'Download') this.fetchClipboard();

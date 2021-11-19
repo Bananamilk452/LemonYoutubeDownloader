@@ -9,6 +9,8 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 
+const { version } = require('../package.json');
+
 library.add(faLink);
 library.add(faSearch);
 library.add(faSlidersH);
@@ -20,6 +22,7 @@ Vue.component('icon', FontAwesomeIcon);
 
 Vue.config.productionTip = false;
 Vue.prototype.$ipcRenderer = window.ipcRenderer;
+Vue.prototype.$version = version;
 
 new Vue({
   router,

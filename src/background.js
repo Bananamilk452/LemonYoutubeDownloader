@@ -1,12 +1,15 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { app, protocol, BrowserWindow } from 'electron';
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import { join } from 'path';
-import { autoUpdater } from 'electron-updater';
-import logger from 'electron-log';
-import ipcInit from './ipc';
-import initInstallScript from './install';
+const {
+  app, protocol, BrowserWindow, Menu,
+} = require('electron');
+// const installExtension = require('electron-devtools-installer').default;
+// const { VUEJS_DEVTOOLS } = require('electron-devtools-installer');
+const { join } = require('path');
+const { autoUpdater } = require('electron-updater');
+const logger = require('electron-log');
+const createProtocol = require('./createProtocol');
+const ipcInit = require('./ipc');
+const initInstallScript = require('./install');
 
 // #region Initial Setting
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -19,7 +22,7 @@ logger.transports.file.getFile().clear();
 // autoUpdater 로그 기록
 autoUpdater.logger = logger;
 autoUpdater.logger.transports.file.level = 'info';
-
+Menu.setApplicationMenu(null);
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
@@ -38,8 +41,8 @@ async function createWindow() {
 
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      nodeIntegration: false,
+      contextIsolation: true,
       enableRemoteModule: false, // turn off remote
       preload: join(__dirname, 'preload.js'), // use a preload script
     },
@@ -48,9 +51,9 @@ async function createWindow() {
   ipcInit(win);
   initInstallScript(win);
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
+  if (process.argv[2] === 'dev') {
     // Load the url of the dev server if in development mode
-    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
+    await win.loadURL('http://localhost:8080');
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol('app');
@@ -85,7 +88,7 @@ app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
-      await installExtension(VUEJS_DEVTOOLS);
+      // await installExtension(VUEJS_DEVTOOLS);
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString());
     }

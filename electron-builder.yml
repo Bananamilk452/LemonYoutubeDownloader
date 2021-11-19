@@ -1,0 +1,19 @@
+directories:
+  output: dist_electron
+  buildResources: build
+  app: dist
+files:
+  - filter:
+      - '**'
+extends: null
+extraFiles:
+  - filter:
+      - ./bin/DO_NOT_REMOVE_THIS_DIRECTORY.txt
+appId: com.lemonyoutubedownloader.app
+productName: LemonYoutubeDownloader
+publish:
+  - provider: github
+    owner: Bananamilk452
+    repo: LemonYoutubeDownloader
+    releaseType: draft
+electronVersion: 13.6.0

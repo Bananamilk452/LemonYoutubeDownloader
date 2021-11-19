@@ -5,6 +5,9 @@ export default {
     openWindow(path, width, height) {
       window.open(`#/${path}`, path, `width=${width},height=${height}`);
     },
+    test() {
+      this.$ipcRenderer.send('test', { videoId: 'r_N_iUUrsJY' });
+    },
   },
 };
 </script>
@@ -13,14 +16,13 @@ export default {
 #navbar
   .navbar-item(@click="openWindow('download', 700, 500)")
     icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
-    .navbar-title 링크 분석
+    .navbar-title 유튜브 영상 다운로드
+  //- .navbar-item(@click="test()")
+  //-   icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
+  //-   .navbar-title 비공개 영상 다운로드
   .navbar-item(@click="openWindow('search', 500, 800)")
     icon(icon="search")
     .navbar-title 영상 검색
-  div(style="flex-grow: 1")
-  .navbar-item
-    icon(icon="sliders-h")
-    .navbar-title 환경 설정
 </template>
 
 <style lang="scss">
@@ -38,7 +40,7 @@ export default {
 }
 
 .navbar-item {
-  /* flex-grow: 1; */
+  flex-grow: 1;
   height: 100%;
   display: flex;
   flex-direction: column;

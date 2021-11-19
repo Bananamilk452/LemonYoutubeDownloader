@@ -1,14 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import axios from 'axios';
-import { promises as fs, existsSync, createWriteStream } from 'fs';
-import AdmZip from 'adm-zip';
-import { ipcMain } from 'electron';
+const axios = require('axios');
+const fs = require('fs').promises;
+const { existsSync, createWriteStream } = require('fs');
+const AdmZip = require('adm-zip');
+const { ipcMain } = require('electron');
 
 let win;
 
-export default function init(window) {
+module.exports = (window) => {
   win = window;
-}
+};
 
 // https://stackoverflow.com/questions/27078285
 function throttle(callback, limit) {
@@ -80,6 +81,7 @@ async function streamDownload(url, name, savedir) {
 
 async function downloadBinary(status) {
   // TODO: 동기로 만들기
+  // TODO: 바이너리 위치 바꿔서 초기화 안되게 하기
   if (status.chromium === false) {
     await streamDownload('https://download-chromium.appspot.com/dl/Win_x64', 'Chromium', './bin/chrome-win.zip')
       .then(async () => {

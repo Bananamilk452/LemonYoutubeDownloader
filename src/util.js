@@ -53,6 +53,41 @@ async function getQualityFromHeadless(videoId) {
   return qualityString.match(/\d*p60|\d*p/gm);
 }
 
+function parseCookie(c) {
+  const pairs = c.split(';');
+  const cookies = [];
+  for (let i = 0; i < pairs.length; i += 1) {
+    const pair = pairs[i].split('=');
+    const coo = {
+      name: (`${pair[0]}`).trim(),
+      value: unescape(pair.slice(1).join('=')),
+      url: 'https://www.youtube.com',
+      secure: true,
+    };
+
+    if (coo.name === 'LOGIN_INFO') {
+      coo.secure = true;
+      coo.httpOnly = true;
+    } else if (coo.name.startsWith('_')) coo.secure = true;
+    cookies.push(coo);
+  }
+  return cookies;
+}
+
+async function getSecretVideoQuality(videoId, cookie) {
+  const browser = await chromium.launch({ args: ['--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies'], headless: false, executablePath: chromiumPath });
+  const page = await browser.newPage();
+
+  await page.context().addCookies(parseCookie(cookie));
+  await page.goto(`https://www.youtube.com/watch?v=${videoId}`);
+  console.log(await page.context().cookies(`https://www.youtube.com/watch?v=${videoId}`));
+  await page.click('.ytp-settings-button');
+  await page.click('.ytp-menuitem:last-child');
+  const qualityString = await (await page.$('.ytp-quality-menu')).textContent();
+  browser.close();
+  return qualityString.match(/\d*p60|\d*p/gm);
+}
+
 async function getDownloadableURLFromHeadless(videoId, quality, type) {
   const browser = await chromium.launch({ args: ['--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies'], headless: true, executablePath: chromiumPath });
   const page = await browser.newPage();
@@ -152,5 +187,5 @@ function createRandomString() {
 }
 
 module.exports = {
-  concatFiles, checkDirectory, getQualityFromHeadless, downloadPart, currentProgress, getDownloadableURLFromHeadless, dividePart, clearPartFile, clearAndCreateTempFolder, createRandomString,
+  concatFiles, checkDirectory, getQualityFromHeadless, downloadPart, currentProgress, getDownloadableURLFromHeadless, dividePart, clearPartFile, clearAndCreateTempFolder, createRandomString, getSecretVideoQuality,
 };

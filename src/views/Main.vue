@@ -46,6 +46,9 @@ export default {
     cancelDownload(data) {
       if (window.confirm(`${data.info.title.substring(0, 20)}... 의 다운로드를 취소할까요?`)) this.$ipcRenderer.send('download cancel', data);
     },
+    openBrowser(url) {
+      this.$ipcRenderer.send('openBrowser', url);
+    },
   },
 };
 </script>
@@ -62,14 +65,16 @@ export default {
         .search-title {{ data.info.title }}
         .search-status
           .search-status-text {{ data.progress.value }}
-          //- // TODO: 속도 표시
           .search-progress(v-if="data.progress.type === 'progress'")
             progress(:max="data.progress.size" :value="data.progress.current")
             .search-progress-text {{ ((data.progress.current / data.progress.size) * 100).toFixed(1) }}%
       .search-cancel(@click="cancelDownload(data)" title="취소하기")
           icon(icon="times")
-    | 유튜브 링크를 복사하고 "링크 분석" 버튼을 누르거나 영상 검색 버튼을 눌러서 검색 후 영상을 다운로드하세요!
-    | 버그 제보: https://github.com/Bananamilk452/LemonYoutubeDownloader/issues/new
+    .notice
+      .notice-title 유튜브 링크를 복사하고 "링크 분석" 버튼을 누르거나 영상 검색 버튼을 눌러서 검색 후 영상을 다운로드하세요!
+      .notice-anchor(@click="openBrowser('https://github.com/Bananamilk452/LemonYoutubeDownloader/issues/new')") 버그 제보하기
+    .version 버전 {{ $version }}
+    //- // TODO: 업데이트 버튼 추가 & 업데이트 확인 중이나 업데이트 다운로드 중 표시하기
 .dimmer(v-else)
   p 초기 설치 중입니다. 응답 없음이 30초 이상 뜰 수 있습니다. 잠시만요...
   .ui.loader.active.small.text {{ progress.text }}
@@ -92,6 +97,32 @@ export default {
 #result > .search-card {
   background-color: transparent !important;
   filter: none !important;
+}
+
+.version {
+  color: #424242;
+  font-size: 14px;
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+}
+
+.notice {
+  margin-top: 12px;
+
+  &-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  &-anchor {
+    cursor: pointer;
+    color: #197cc7;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 .search- {
