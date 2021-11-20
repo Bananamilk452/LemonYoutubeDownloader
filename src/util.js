@@ -63,11 +63,11 @@ function parseCookie(cookie) {
   let c = cookie;
   c = c.split('\n');
   c.splice(0, 4);
-  c = c.map((x) => {
+  c = c.map((x, i) => {
     const s = x.split(/\s/);
     const r = {
-      name: s[5],
-      value: unescape(s[6]),
+      name: s[5] || `cookie${i}`,
+      value: unescape(s[6]) || `cookie${i}`,
       url: 'https://www.youtube.com',
       secure: true,
     };

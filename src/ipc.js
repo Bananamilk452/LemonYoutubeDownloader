@@ -1,6 +1,8 @@
 /* eslint-disable no-await-in-loop */
 const { join } = require('path');
-const { ipcMain, Notification, shell } = require('electron');
+const {
+  ipcMain, Notification, shell, dialog,
+} = require('electron');
 const ytsr = require('better-ytsr');
 const { getInfo } = require('ytdl-core');
 const fs = require('fs').promises;
@@ -68,7 +70,7 @@ ipcMain.on('download', async (event, arg) => {
       working[uuid].kill();
     } else if (data.status === 'fail') {
       win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
-      alert(data.error);
+      dialog.showErrorBox('에러가 발생했습니다!'`에러 내용: \n${data.error}`);
       // 수정하기 alert 대체
       working[uuid].kill();
     } else {
@@ -102,7 +104,7 @@ ipcMain.on('private download', async (event, arg) => {
       working[uuid].kill();
     } else if (data.status === 'fail') {
       win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
-      alert(data.error);
+      dialog.showErrorBox('에러가 발생했습니다!'`에러 내용: \n${data.error}`);
       // 수정하기 alert 대체
       working[uuid].kill();
     } else {
