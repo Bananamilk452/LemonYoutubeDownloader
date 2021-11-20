@@ -34,6 +34,15 @@ html, body, #app, #main {
   overflow: hidden;
 }
 
+a {
+  cursor: pointer;
+  color: #197cc7;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 input {
   border: 1px solid rgb(197, 197, 197);
   border-radius: 4px;

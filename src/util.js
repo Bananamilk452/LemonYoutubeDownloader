@@ -9,6 +9,7 @@ const { chromium } = require('playwright');
 const { join } = require('path');
 const pathResolve = require('path').resolve;
 const axios = require('axios');
+const { getInfo } = require('ytdl-core');
 
 const chromiumPath = pathResolve('./bin/chromium-latest/chrome-win/chrome.exe');
 const currentProgress = {};
@@ -17,12 +18,17 @@ function addProgress(videoid, size) {
   currentProgress[videoid] += size;
 }
 
-async function concatFiles(count, tempFolder, destination, type) {
+async function concatFiles(count, tempFolder, destination, type, skip) {
   return new Promise((resolve, reject) => {
     const buffersKey = new Array(count).fill('');
     const streamArray = buffersKey.map((x, i) => createReadStream(join(tempFolder, `${type}_part_${i}.part`)));
     const writer = createWriteStream(destination);
     const reader = new MultiStream(streamArray);
+    if (skip !== undefined) {
+      for (let i = 0; i < skip; i += 1) {
+        buffersKey.shift();
+      }
+    }
     reader.pipe(writer);
     writer.once('finish', () => {
       console.log(`Finish concat ${type} files`);
@@ -42,7 +48,7 @@ async function checkDirectory(saveLocation) {
 }
 
 async function getQualityFromHeadless(videoId) {
-  const browser = await chromium.launch({ args: ['--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies'], headless: true, executablePath: chromiumPath });
+  const browser = await chromium.launch({ headless: true, executablePath: chromiumPath });
   const page = await browser.newPage();
 
   await page.goto(`https://www.youtube.com/watch?v=${videoId}`);
@@ -53,34 +59,30 @@ async function getQualityFromHeadless(videoId) {
   return qualityString.match(/\d*p60|\d*p/gm);
 }
 
-function parseCookie(c) {
-  const pairs = c.split(';');
-  const cookies = [];
-  for (let i = 0; i < pairs.length; i += 1) {
-    const pair = pairs[i].split('=');
-    const coo = {
-      name: (`${pair[0]}`).trim(),
-      value: unescape(pair.slice(1).join('=')),
+function parseCookie(cookie) {
+  let c = cookie;
+  c = c.split('\n');
+  c.splice(0, 4);
+  c = c.map((x) => {
+    const s = x.split(/\s/);
+    const r = {
+      name: s[5],
+      value: unescape(s[6]),
       url: 'https://www.youtube.com',
       secure: true,
     };
-
-    if (coo.name === 'LOGIN_INFO') {
-      coo.secure = true;
-      coo.httpOnly = true;
-    } else if (coo.name.startsWith('_')) coo.secure = true;
-    cookies.push(coo);
-  }
-  return cookies;
+    if (s[5] === 'LOGIN_INFO') r.httpOnly = true;
+    return r;
+  });
+  return c;
 }
 
-async function getSecretVideoQuality(videoId, cookie) {
-  const browser = await chromium.launch({ args: ['--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies'], headless: false, executablePath: chromiumPath });
+async function getPrivateVideoQuality(videoId, cookie) {
+  const browser = await chromium.launch({ headless: true, executablePath: chromiumPath });
   const page = await browser.newPage();
 
   await page.context().addCookies(parseCookie(cookie));
   await page.goto(`https://www.youtube.com/watch?v=${videoId}`);
-  console.log(await page.context().cookies(`https://www.youtube.com/watch?v=${videoId}`));
   await page.click('.ytp-settings-button');
   await page.click('.ytp-menuitem:last-child');
   const qualityString = await (await page.$('.ytp-quality-menu')).textContent();
@@ -88,16 +90,36 @@ async function getSecretVideoQuality(videoId, cookie) {
   return qualityString.match(/\d*p60|\d*p/gm);
 }
 
-async function getDownloadableURLFromHeadless(videoId, quality, type) {
-  const browser = await chromium.launch({ args: ['--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies'], headless: true, executablePath: chromiumPath });
+async function getPrivateVideoInfo(videoId, cookie) {
+  let c = '';
+  parseCookie(cookie).forEach((x) => {
+    c += `${x.name}=${x.value};`;
+  });
+  c = c.substring(0, c.length - 2);
+
+  const data = await getInfo(videoId, { requestOptions: { headers: { cookie: c } } });
+  return data;
+}
+
+async function getDownloadableURLFromHeadless(videoId, quality, type, cookie) {
+  const browser = await chromium.launch({ headless: true, executablePath: chromiumPath });
   const page = await browser.newPage();
+
+  if (cookie !== undefined) {
+    await page.context().addCookies(parseCookie(cookie));
+  }
 
   let audioURL;
   let videoURL;
+  let readyToGo = false;
 
   page.on('request', (request) => {
     if (request.url().includes('googlevideo.com') && request.url().includes('mime=video')) videoURL = request.url().replace(/&range=[0-9]*-[0-9]*/gm, '');
     if (request.url().includes('googlevideo.com') && request.url().includes('mime=audio')) audioURL = request.url().replace(/&range=[0-9]*-[0-9]*/gm, '');
+
+    if (type === 'video') {
+      if (videoURL !== '' && audioURL !== '') readyToGo = true;
+    }
   });
 
   await page.goto(`https://www.youtube.com/watch?v=${videoId}`);
@@ -115,7 +137,15 @@ async function getDownloadableURLFromHeadless(videoId, quality, type) {
   }
 
   // 네트워크 로딩 시간
-  await new Promise((r) => setTimeout(r, 1000));
+  await new Promise((r) => {
+    const interval = setInterval(() => {
+      if (readyToGo) {
+        clearInterval(interval);
+        r();
+      }
+    }, 500);
+  });
+
   browser.close();
 
   if (type === 'video') return { videoURL, audioURL };
@@ -187,5 +217,17 @@ function createRandomString() {
 }
 
 module.exports = {
-  concatFiles, checkDirectory, getQualityFromHeadless, downloadPart, currentProgress, getDownloadableURLFromHeadless, dividePart, clearPartFile, clearAndCreateTempFolder, createRandomString, getSecretVideoQuality,
+  concatFiles,
+  checkDirectory,
+  getQualityFromHeadless,
+  downloadPart,
+  currentProgress,
+  getDownloadableURLFromHeadless,
+  dividePart,
+  clearPartFile,
+  clearAndCreateTempFolder,
+  createRandomString,
+  getPrivateVideoQuality,
+  getPrivateVideoInfo,
+  parseCookie,
 };

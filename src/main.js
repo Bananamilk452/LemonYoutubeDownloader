@@ -23,6 +23,9 @@ Vue.component('icon', FontAwesomeIcon);
 Vue.config.productionTip = false;
 Vue.prototype.$ipcRenderer = window.ipcRenderer;
 Vue.prototype.$version = version;
+Vue.prototype.$openBrowser = (url) => {
+  this.$ipcRenderer.send('openBrowser', url);
+};
 
 new Vue({
   router,

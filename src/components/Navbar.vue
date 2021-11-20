@@ -17,9 +17,9 @@ export default {
   .navbar-item(@click="openWindow('download', 700, 500)")
     icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
     .navbar-title 유튜브 영상 다운로드
-  //- .navbar-item(@click="test()")
-  //-   icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
-  //-   .navbar-title 비공개 영상 다운로드
+  .navbar-item(@click="openWindow('privatedownload', 700, 500)")
+    icon(:icon="['fab','youtube']" style="color: red;background:linear-gradient(white,white) center center/20% 70% no-repeat;")
+    .navbar-title 비공개 영상 다운로드
   .navbar-item(@click="openWindow('search', 500, 800)")
     icon(icon="search")
     .navbar-title 영상 검색

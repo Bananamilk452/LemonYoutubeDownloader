@@ -1,0 +1,46 @@
+
+Clearing Temp Folder...
+21:49:09 Removed temp hxymGUbOY9o folder
+21:49:11 Chromium Found in: ./bin/chromium-latest/chrome-win
+21:49:11 ffmpeg Found in: ./bin/ffmpeg.exe
+21:49:19 VISITOR_INFO1_LIVE=NF56AvHnZo4;NID=222=ijZi18Vj2a4CsoV26pfXi0R4cF3cE1rkzqJ63wVkrbA5ZKOnj8CTPXW8aKcRaloYL8Z58nWzYC_SkjrKgARtA-27pGchJPL0pXTEzSb-K4tFsODusRnYRw5BpyVQ4MAv9DwEVtDn1hXZcZtgRPoO7AZPUGb-1CIbRu4TESKlsrY;__tad=1631370665.4245063;SID=DwhVspxbOeWpc7ZSHb0ngg4VX96KrY3OkHfFyzPQiDPbyMMP4TPMd9py2fuVFwPhv3zw0g.;__Secure-1PSID=DwhVspxbOeWpc7ZSHb0ngg4VX96KrY3OkHfFyzPQiDPbyMMPs7C6_RN2I0LjB36ynCpypg.;__Secure-3PSID=DwhVspxbOeWpc7ZSHb0ngg4VX96KrY3OkHfFyzPQiDPbyMMPWL7Tbhi_V3EBhQp76PKnyw.;HSID=ACqyOStceS6C3M-_3;SSID=AYcpa3qQ-UgUe60by;APISID=ZVzi7YJPymCvFdHF/A4d3IRak7VO38aPqN;SAPISID=JFUblK5XJOHyp9KM/Az8Ro-0ESwnmTSL9-;__Secure-1PAPISID=JFUblK5XJOHyp9KM/Az8Ro-0ESwnmTSL9-;__Secure-3PAPISID=JFUblK5XJOHyp9KM/Az8Ro-0ESwnmTSL9-;PREF=f6=40000080&tz=Asia.Seoul&f5=30000&f4=4000000;YSC=ip4IVU7065c;LOGIN_INFO=AFmmF2swRAIgLkXlcXgLhbH3L7QnRTQ04FAEw4gCLOUzjXxuWP5jGiQCIG1XcUyKyRNQwo8TTlJ5ov8m_BTAHn4zWAGRLIQ7o-2D:QUQ3MjNmeEpGa0YtME80bkdjVzlFUktyOFM2MzdhalQtV1k0Ulg2c2xnVG5jUDNpdFAyV1VtMUpaYVVnVVhHTGplc29kZ01IMTVVeEFzbVVUVlhmZ2N3Vmo5RTY0Q2JXTU0xNjdWV0hrMWo4YkxMX3J5N2lkdTVLSnJYTjc2SUVkUWF2VnJaSG9iVVRmUldVVGx6YlBMenhzOGx5QS1xYjhn;SIDCC=AJi4QfFwlkpM5FRxOo_D9ck__TeRvX-rSTG1KyUiRe3ksl3YCCCTdVjqVzceWHD-PG2HVLLzjTg-;__Secure-3PSIDCC=AJi4QfHB_IjHom6ggFH_HzLZUgCcHFMowt6sEw0isDrcvSoa_YlqhXN_WhzJqy1oKemZBKooZOS
+[hxymGUbOY9o] Fetching Datas from headless browser...
+[hxymGUbOY9o] Fetching content size from url...
+https://r4---sn-ab02a0nfpgxapox-ipoe.googlevideo.com/videoplayback?expire=1637347782&ei=Zp2XYfGoA5OevcAPkdWXiAE&ip=122.32.96.122&id=o-APaVuPLG4ihwFpubFhREc9wXslOTutkdUPGPGWAl_LXS&itag=302&aitags=133%2C134%2C135%2C136%2C160%2C242%2C243%2C244%2C247%2C278%2C298%2C299%2C302%2C303&source=yt_otf&requiressl=yes&mh=KV&mm=31%2C29&mn=sn-ab02a0nfpgxapox-ipoe%2Csn-ab02a0nfpgxapox-bh2e7&ms=au%2Crdu&mv=m&mvi=4&pl=25&initcwndbps=2097500&vprv=1&mime=video%2Fwebm&ns=6JdHGGZhfuc7PTk84TaalvAG&otf=1&otfp=1&dur=0.000&lmt=1606919849230084&mt=1637325898&fvip=4&keepalive=yes&fexp=24001373%2C24007246&c=WEB&txp=7210222&n=PHNROcv60sWjxA&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cvprv%2Cmime%2Cns%2Cotf%2Cotfp%2Cdur%2Clmt&sig=AOq0QJ8wRAIgfeK5EyGQIK2VMOLNfVFDHVtKm3r_1LP9YlotQorpES4CIFuBaEq-hV0sQ9yQMOvOm596uIsJHKuS_ZVV8MFb4KKr&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRQIgWq5WE4MM-kVtdgyN3-EUm6R0uwgJiDMCz8AMG582ghQCIQDq4WID-CoQ38hIWZTkzL9r2O6JkhOJXSwLD8rw72R1OQ%3D%3D&alr=yes&cpn=bvnzAevzStUzoqNw&cver=2.20211117.07.00&sq=0
+[ 'Segment-Count: 439' ]
+메타데이터 확인, 중복 검사 시도...
+https://r4---sn-ab02a0nfpgxapox-ipoe.googlevideo.com/videoplayback?expire=1637347782&ei=Zp2XYfGoA5OevcAPkdWXiAE&ip=122.32.96.122&id=o-APaVuPLG4ihwFpubFhREc9wXslOTutkdUPGPGWAl_LXS&itag=302&aitags=133%2C134%2C135%2C136%2C160%2C242%2C243%2C244%2C247%2C278%2C298%2C299%2C302%2C303&source=yt_otf&requiressl=yes&mh=KV&mm=31%2C29&mn=sn-ab02a0nfpgxapox-ipoe%2Csn-ab02a0nfpgxapox-bh2e7&ms=au%2Crdu&mv=m&mvi=4&pl=25&initcwndbps=2097500&vprv=1&mime=video%2Fwebm&ns=6JdHGGZhfuc7PTk84TaalvAG&otf=1&otfp=1&dur=0.000&lmt=1606919849230084&mt=1637325898&fvip=4&keepalive=yes&fexp=24001373%2C24007246&c=WEB&txp=7210222&n=PHNROcv60sWjxA&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cvprv%2Cmime%2Cns%2Cotf%2Cotfp%2Cdur%2Clmt&sig=AOq0QJ8wRAIgfeK5EyGQIK2VMOLNfVFDHVtKm3r_1LP9YlotQorpES4CIFuBaEq-hV0sQ9yQMOvOm596uIsJHKuS_ZVV8MFb4KKr&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRQIgWq5WE4MM-kVtdgyN3-EUm6R0uwgJiDMCz8AMG582ghQCIQDq4WID-CoQ38hIWZTkzL9r2O6JkhOJXSwLD8rw72R1OQ%3D%3D&alr=yes&cpn=bvnzAevzStUzoqNw&cver=2.20211117.07.00&sq=1
+메타데이터 중복 확인 및 수집 완료. 작업 시작
+undefined 1 0
+[hxymGUbOY9o] Download Started...
+[hxymGUbOY9o] Starting download audio part 0
+[hxymGUbOY9o] Starting download audio part 1
+[hxymGUbOY9o] Starting download audio part 2
+[hxymGUbOY9o] Starting download audio part 3
+[hxymGUbOY9o] Finished download audio part 2
+[hxymGUbOY9o] Starting download audio part 4
+[hxymGUbOY9o] Finished download audio part 3
+[hxymGUbOY9o] Starting download audio part 5
+[hxymGUbOY9o] Finished download audio part 0
+[hxymGUbOY9o] Starting download audio part 6
+[hxymGUbOY9o] Finished download audio part 5
+[hxymGUbOY9o] Finished download audio part 1
+[hxymGUbOY9o] Starting download audio part 7
+[hxymGUbOY9o] Starting download audio part 8
+[hxymGUbOY9o] Finished download audio part 6
+[hxymGUbOY9o] Starting download audio part 9
+[hxymGUbOY9o] Finished download audio part 7
+[hxymGUbOY9o] Finished download audio part 8
+[hxymGUbOY9o] Starting download audio part 10
+[hxymGUbOY9o] Starting download audio part 11
+[hxymGUbOY9o] Finished download audio part 4
+[hxymGUbOY9o] Starting download audio part 12
+[hxymGUbOY9o] Finished download audio part 11
+[hxymGUbOY9o] Starting download audio part 13
+[hxymGUbOY9o] Finished download audio part 13
+[hxymGUbOY9o] Finished download audio part 12
+[hxymGUbOY9o] Finished download audio part 10
+[hxymGUbOY9o] Finished download audio part 9
+[hxymGUbOY9o] Concating downloaded part files...
+Finish concat video files
+Finish concat audio files

@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import Main from '../views/Main.vue';
 import Search from '../views/Search.vue';
 import Download from '../views/Download.vue';
+import PrivateDownload from '../views/PrivateDownload.vue';
 
 Vue.use(VueRouter);
 
@@ -26,6 +27,11 @@ const routes = [
     path: '/direct/:id',
     name: 'Direct',
     component: Download,
+  },
+  {
+    path: '/privatedownload',
+    name: 'PrivateDownload',
+    component: PrivateDownload,
   },
 ];
 

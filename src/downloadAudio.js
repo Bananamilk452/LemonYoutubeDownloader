@@ -12,7 +12,6 @@ async function downloadAudio(arg, uuid) {
   return new Promise((resolve, reject) => {
     (async () => {
       try {
-      // TODO: 리팩토링해서 분류에 맞게 코드 정렬하기
         process.send({ title: 'download receive', data: { ...arg, uuid } });
 
         const videoId = arg.url.match(/.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/)[1];
@@ -23,7 +22,7 @@ async function downloadAudio(arg, uuid) {
 
         console.log(`[${videoId}] Fetching Datas from headless browser...`);
         process.send({ title: 'download progress', data: { url: arg.url, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' } });
-        const { audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'audio');
+        const { audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'audio', arg.cookie);
 
         console.log(`[${videoId}] Fetching content size from url...`);
         process.send({ title: 'download progress', data: { url: arg.url, value: '크기 계산 중...', type: 'text' } });

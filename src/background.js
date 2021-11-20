@@ -2,8 +2,8 @@
 const {
   app, protocol, BrowserWindow, Menu,
 } = require('electron');
-// const installExtension = require('electron-devtools-installer').default;
-// const { VUEJS_DEVTOOLS } = require('electron-devtools-installer');
+const installExtension = require('electron-devtools-installer').default;
+const { VUEJS_DEVTOOLS } = require('electron-devtools-installer');
 const { join } = require('path');
 const { autoUpdater } = require('electron-updater');
 const logger = require('electron-log');
@@ -39,8 +39,7 @@ async function createWindow() {
     title: 'LemonYoutubeDownloader',
     webPreferences: {
 
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
+      devTools: true,
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false, // turn off remote
@@ -88,7 +87,7 @@ app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
-      // await installExtension(VUEJS_DEVTOOLS);
+      await installExtension(VUEJS_DEVTOOLS);
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString());
     }

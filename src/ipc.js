@@ -8,7 +8,7 @@ const { existsSync } = require('fs');
 const { fork } = require('child_process');
 const { stringify } = require('flatted');
 const {
-  createRandomString, getQualityFromHeadless, getSecretVideoQuality,
+  createRandomString, getQualityFromHeadless, getPrivateVideoQuality, getPrivateVideoInfo,
 } = require('./util');
 
 let win;
@@ -69,6 +69,7 @@ ipcMain.on('download', async (event, arg) => {
     } else if (data.status === 'fail') {
       win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
       alert(data.error);
+      // 수정하기 alert 대체
       working[uuid].kill();
     } else {
       win.webContents.send(data.title, data.data);
@@ -82,9 +83,32 @@ ipcMain.on('download cancel', async (event, arg) => {
   fs.rm(`./temp/${arg.info.videoId}`, { force: true, recursive: true });
 });
 
-ipcMain.on('test', async (event, arg) => {
-  const a = await getSecretVideoQuality(arg.videoId, 'SID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9ur5c5P2e_JNewNEeL8q4-mw.; __Secure-1PSID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9u1YZJ6KV2H8qamM4umZJBCA.; __Secure-3PSID=EAhLw9eKScD7inSwibvfvnUcPBrmu5ePOVGQKBce6-OTSp9u3ETOUSpWR8TWOMCjlw-JuA.; HSID=AJ-_Ah6kT_0AkMS4d; SSID=AwdP9-e7YXZ1ME-Q5; APISID=Aui1ifv7Jz2doYSJ/AAw8KBk21Nqv9JkmF; SAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; __Secure-1PAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; __Secure-3PAPISID=4iim1GFJnrMtFony/AGl3gvdf_xUAGb_xO; SIDCC=AJi4QfFcLw…ecure-3PSIDCC=AJi4QfFNH5R1gAp5yjArk24-OeGOcef6_thGA2dFrh0t9MFJb5d-R71fk3s_7p8rWKGEkmVIz5E; PREF=tz=Asia.Seoul&gl=KR&hl=en; VISITOR_INFO1_LIVE=UVJfhnWi8l8; LOGIN_INFO=AFmmF2swRgIhAPoPkqHIIGLIunodHromWqa6FbjZPpfW8BvSvWRGb-nFAiEAhvF1wikcn0_I2GPMlATbdGEKA1nmtDXjPQLiMTNl8UM:QUQ3MjNmd3VVTWUtQV9DbkhYV1Jmd3o5dU5EQzZlc2w3SGVzdXloQm1mZHkxcUFyUnhZcm1Ta2NSQ0NtSHhPYnhPZ0tVeTNzTEtlZUpuY002bkNmWWhUbnlJTlBVbnhXaGlxVFFEYk41NlhoV2RJekh1blNLNWctbWhLMm9rTUh2T0xnSVd3bjFOTUloZXA3XzJ4REw3Y2hKWUdwZzZfR3lB; YSC=GayRzm6JTOY; wide=0');
-  console.log(a);
+ipcMain.on('private getinfo', async (event, arg) => {
+  event.reply('private getinfo data', await getPrivateVideoInfo(arg.videoId, arg.cookie));
+});
+
+ipcMain.on('private getheadless', async (event, arg) => {
+  event.reply('private getheadless data', await getPrivateVideoQuality(arg.videoId, arg.cookie));
+});
+
+ipcMain.on('private download', async (event, arg) => {
+  const uuid = createRandomString();
+  working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadPrivate.js' : join(__dirname, 'downloadPrivate.js'));
+  working[uuid].send(stringify({ arg, uuid }));
+  working[uuid].on('message', (data) => {
+    if (data.status === 'ok') {
+      new Notification({ title: '다운로드 완료!', body: `${data.filename}의 다운로드가 완료되었습니다!` }).show();
+      shell.showItemInFolder(data.fileLocation);
+      working[uuid].kill();
+    } else if (data.status === 'fail') {
+      win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
+      alert(data.error);
+      // 수정하기 alert 대체
+      working[uuid].kill();
+    } else {
+      win.webContents.send(data.title, data.data);
+    }
+  });
 });
 
 // #region downloadVideo

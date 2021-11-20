@@ -1,12 +1,15 @@
+/* eslint-disable no-inner-declarations */
+/* eslint-disable prefer-destructuring */
 const { join } = require('path');
 const asyncPool = require('tiny-async-pool');
 const fs = require('fs').promises;
+const { createWriteStream } = require('fs');
 const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const { homedir } = require('os');
 const { parse } = require('flatted');
 const {
-  checkDirectory, concatFiles, downloadPart, getDownloadableURLFromHeadless, currentProgress, dividePart, clearPartFile, clearAndCreateTempFolder,
+  checkDirectory, concatFiles, downloadPart, getDownloadableURLFromHeadless, currentProgress, dividePart, clearAndCreateTempFolder,
 } = require('./util');
 
 async function downloadVideo(arg, uuid) {
@@ -31,10 +34,75 @@ async function downloadVideo(arg, uuid) {
         const videoContentLength = Number(infos[0].headers['content-length']);
         const audioContentLength = Number(infos[1].headers['content-length']);
 
-        const splitSize = 10; // Megabyte
         const poolCount = 4;
-        const videoPart = dividePart(splitSize, videoContentLength);
         const audioPart = dividePart(2, audioContentLength); // 오디오 다운로드는 끊김현상이 심해서 고정
+
+        await clearAndCreateTempFolder(tempFolder);
+
+        let url = new URL(videoURL);
+        let param = new URLSearchParams(url.search);
+        param.delete('rn');
+        param.delete('rbuf');
+        let count = 0;
+        let diff = 0;
+
+        async function checkMetadata() {
+          param.set('sq', diff);
+          url.search = param;
+          await axios.get(url.href, { encoding: 'utf8' })
+            .then(async (res) => {
+              if (res.data.startsWith('https://')) {
+                url = new URL(res.data);
+                param = new URLSearchParams(url.search);
+                await checkMetadata();
+                return;
+              }
+              const match = (/Segment-Count: ([0-9]*)/gm).exec(res.data);
+              if (match === null && diff === 0) console.error('메타데이터 찾을 수 없음');
+              else if (match === null && diff > 0) {
+                console.log('메타데이터 중복 확인 및 수집 완료. 작업 시작');
+              } else if (match !== null && diff > 0) {
+                console.log('메타데이터 중복, 생략함');
+                diff += 1;
+                await checkMetadata();
+              } else if (match !== null && diff === 0) {
+                count = Number(match[1]);
+                diff += 1;
+                console.log('메타데이터 확인, 중복 검사 시도...');
+                await checkMetadata();
+              }
+            });
+        }
+
+        await checkMetadata();
+        // 0에서 request 시작과 1에서 시작이 데이터가 달라서 부득이하게 0으로 시작하고
+        // 겹치는건 그냥 스킵
+        async function dl(num) {
+          // eslint-disable-next-line no-async-promise-executor
+          return new Promise((rs, rj) => {
+            const tempURL = url;
+            const tempParam = param;
+            tempParam.set('sq', num);
+            tempURL.search = param;
+            process.send({ title: 'download progress', data: { url: arg.url, value: `${num}/${count}번째 파일 다운로드 중...`, type: 'text' } });
+            console.log(`[${videoId}] Downloading ${num}/${count} file`);
+            axios.get(tempURL.href, { validateStatus: false, responseType: 'stream' })
+              .then(async (res) => {
+                const writer = createWriteStream(`temp/${videoId}/video_part_${num}.part`);
+                res.data.pipe(writer);
+                writer.on('finish', () => {
+                  rs();
+                });
+              })
+              .catch((e) => {
+                console.error(e);
+                rj();
+              });
+          });
+        }
+
+        const a = Array.from(Array(count).keys());
+        await asyncPool(poolCount, a, dl);
 
         process.send({
           title: 'download progress',
@@ -49,33 +117,28 @@ async function downloadVideo(arg, uuid) {
           process.send({
             title: 'download progress',
             data: {
-              url: arg.url, size: videoContentLength + audioContentLength, current: currentProgress[videoId], value: '영상과 오디오 다운로드 중...', type: 'progress',
+              url: arg.url, size: videoContentLength + audioContentLength, current: currentProgress[videoId], value: '오디오 다운로드 중...', type: 'progress',
             },
           });
         }, 300);
 
-        await clearAndCreateTempFolder(tempFolder);
-
-        const videoIndexArray = Array.from(Array(videoPart.length).keys());
         const audioIndexArray = Array.from(Array(audioPart.length).keys());
 
-        const videoConfigs = videoIndexArray.map((x) => ({
-          index: x, url: videoURL, filename: `temp/${videoId}/video_part_${x}.part`, part: videoPart[x], type: 'video', videoId,
-        }));
         const audioConfigs = audioIndexArray.map((x) => ({
           index: x, url: audioURL, filename: `temp/${videoId}/audio_part_${x}.part`, part: audioPart[x], type: 'audio', videoId,
         }));
 
         console.log(`[${videoId}] Download Started...`);
-        await Promise.all([asyncPool(poolCount, videoConfigs, downloadPart), asyncPool(poolCount, audioConfigs, downloadPart)]);
+        await asyncPool(poolCount, audioConfigs, downloadPart);
         clearInterval(sendProgress);
 
         console.log(`[${videoId}] Concating downloaded part files...`);
         process.send({ title: 'download progress', data: { url: arg.url, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
-        await concatFiles(videoPart.length, tempFolder, join(tempFolder, 'video.mkv'), 'video');
+
+        await concatFiles(count, tempFolder, join(tempFolder, 'video.mkv'), 'video', diff - 1);
         await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.mkv'), 'audio');
 
-        clearPartFile(videoPart.length, audioPart.length, tempFolder);
+        // clearPartFile(videoPart.length, audioPart.length, tempFolder);
 
         ffmpeg.setFfmpegPath('./bin/ffmpeg.exe');
         ffmpeg(join(tempFolder, 'video.mkv'))
