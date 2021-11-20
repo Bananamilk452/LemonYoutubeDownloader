@@ -11,8 +11,6 @@
 
 + Support i18n (English)
 + 일반 다운로드 지원
-+ 다운로드 중간에 취소할 수 있게 만들기
-+ 속도 개선
 + [Sentry](https://sentry.io) 도입 예정
 
 ## 고칠 점
