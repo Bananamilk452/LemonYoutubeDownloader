@@ -60,6 +60,7 @@ async function getQualityFromHeadless(videoId) {
 }
 
 function parseCookie(cookie) {
+  // TODO .youtube로 시작 안하면 삭제
   let c = cookie;
   c = c.split('\n');
   c.splice(0, 4);
