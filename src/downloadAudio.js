@@ -21,11 +21,11 @@ async function downloadAudio(arg, uuid) {
         await checkDirectory(saveDirectory);
 
         console.log(`[${videoId}] Fetching Datas from headless browser...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' } });
         const { audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'audio', arg.cookie);
 
         console.log(`[${videoId}] Fetching content size from url...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '크기 계산 중...', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '크기 계산 중...', type: 'text' } });
         const info = await axios.head(audioURL);
         const audioContentLength = Number(info.headers['content-length']);
 
@@ -36,7 +36,7 @@ async function downloadAudio(arg, uuid) {
         process.send({
           title: 'download progress',
           data: {
-            url: arg.url, size: audioContentLength, current: 0, value: '오디오 다운로드 중...', type: 'progress',
+            uuid, size: audioContentLength, current: 0, value: '오디오 다운로드 중...', type: 'progress',
           },
         });
 
@@ -46,7 +46,7 @@ async function downloadAudio(arg, uuid) {
           process.send({
             title: 'download progress',
             data: {
-              url: arg.url, size: audioContentLength, current: currentProgress[videoId], value: '오디오 다운로드 중...', type: 'progress',
+              uuid, size: audioContentLength, current: currentProgress[videoId], value: '오디오 다운로드 중...', type: 'progress',
             },
           });
         }, 300);
@@ -64,13 +64,14 @@ async function downloadAudio(arg, uuid) {
         clearInterval(sendProgress);
 
         console.log(`[${videoId}] Concating downloaded part files...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
         await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.ogg'), 'audio');
 
         clearPartFile(0, audioPart.length, tempFolder);
         console.log(`[${videoId}] Audio merged successfully.`);
         const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
 
+        // TODO: 같은 파일이 있으면 딜레이 길어짐, 파일 핸들이 망가짐
         await fs.copyFile(join(tempFolder, 'audio.ogg'), join(saveDirectory, `${filename}.ogg`));
 
         fs.rm(tempFolder, { recursive: true, force: true });
@@ -86,10 +87,10 @@ process.on('message', async (data) => {
   const { arg, uuid } = parse(data);
   await downloadAudio(arg, uuid)
     .then((res) => {
-      process.send({ status: 'ok', ...res });
+      process.send({ status: 'ok', ...res, uuid });
     })
     .catch((err) => {
       console.log(err);
-      process.send({ status: 'fail', error: err, url: arg.url });
+      process.send({ status: 'fail', error: err, uuid });
     });
 });

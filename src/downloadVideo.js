@@ -22,11 +22,11 @@ async function downloadVideo(arg, uuid) {
         await checkDirectory(saveDirectory);
 
         console.log(`[${videoId}] Fetching Datas from headless browser...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' } });
         const { videoURL, audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'video', arg.cookie);
 
         console.log(`[${videoId}] Fetching content size from url...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '크기 계산 중...', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '크기 계산 중...', type: 'text' } });
         const infos = await Promise.all([axios.head(videoURL), axios.head(audioURL)]);
         const videoContentLength = Number(infos[0].headers['content-length']);
         const audioContentLength = Number(infos[1].headers['content-length']);
@@ -39,7 +39,7 @@ async function downloadVideo(arg, uuid) {
         process.send({
           title: 'download progress',
           data: {
-            url: arg.url, size: videoContentLength + audioContentLength, current: 0, value: '영상과 오디오 다운로드 중...', type: 'progress',
+            uuid, size: videoContentLength + audioContentLength, current: 0, value: '영상과 오디오 다운로드 중...', type: 'progress',
           },
         });
 
@@ -49,7 +49,7 @@ async function downloadVideo(arg, uuid) {
           process.send({
             title: 'download progress',
             data: {
-              url: arg.url, size: videoContentLength + audioContentLength, current: currentProgress[videoId], value: '영상과 오디오 다운로드 중...', type: 'progress',
+              uuid, size: videoContentLength + audioContentLength, current: currentProgress[videoId], value: '영상과 오디오 다운로드 중...', type: 'progress',
             },
           });
         }, 300);
@@ -71,7 +71,7 @@ async function downloadVideo(arg, uuid) {
         clearInterval(sendProgress);
 
         console.log(`[${videoId}] Concating downloaded part files...`);
-        process.send({ title: 'download progress', data: { url: arg.url, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
+        process.send({ title: 'download progress', data: { uuid, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
         await concatFiles(videoPart.length, tempFolder, join(tempFolder, 'video.mkv'), 'video');
         await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.mkv'), 'audio');
 
@@ -86,7 +86,7 @@ async function downloadVideo(arg, uuid) {
             process.send({
               title: 'download progress',
               data: {
-                url: arg.url, size: 10000, current: p.percent * 100, value: `영상과 오디오 합치는 중... (${p.currentKbps}Kbps)`, type: 'progress',
+                uuid, size: 10000, current: p.percent * 100, value: `영상과 오디오 합치는 중... (${p.currentKbps}Kbps)`, type: 'progress',
               },
             });
           })
@@ -95,12 +95,13 @@ async function downloadVideo(arg, uuid) {
             const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
 
             await fs.copyFile(join(tempFolder, 'final.mkv'), join(saveDirectory, `${filename}.mkv`));
-            process.send({ title: 'download progress', data: { url: arg.url, value: '다운로드 완료!', type: 'text' } });
+            process.send({ title: 'download progress', data: { uuid, value: '다운로드 완료!', type: 'text' } });
             fs.rm(tempFolder, { recursive: true, force: true });
             resolve({ filename, fileLocation: join(saveDirectory, `${filename}.mkv`) });
           })
           .on('error', (err) => {
             console.log(`an error happened: ${err.message}`);
+            reject(err);
           });
       } catch (err) {
         reject(err);
@@ -113,10 +114,10 @@ process.on('message', async (data) => {
   const { arg, uuid } = parse(data);
   await downloadVideo(arg, uuid)
     .then((res) => {
-      process.send({ status: 'ok', ...res });
+      process.send({ status: 'ok', ...res, uuid });
     })
     .catch((err) => {
       console.log(err);
-      process.send({ status: 'fail', error: err, url: arg.url });
+      process.send({ status: 'fail', error: err, uuid });
     });
 });

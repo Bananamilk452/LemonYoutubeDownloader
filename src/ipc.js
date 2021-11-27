@@ -37,7 +37,7 @@ module.exports = (window) => {
 // #endregion
 
 ipcMain.on('openBrowser', async (event, arg) => {
-  shell.openExternal(arg.url);
+  shell.openExternal(arg);
 });
 
 ipcMain.on('search', async (event, arg) => {
@@ -65,11 +65,12 @@ ipcMain.on('download', async (event, arg) => {
   working[uuid].send(stringify({ arg, uuid }));
   working[uuid].on('message', (data) => {
     if (data.status === 'ok') {
+      win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 완료!', type: 'text' });
       new Notification({ title: '다운로드 완료!', body: `${data.filename}의 다운로드가 완료되었습니다!` }).show();
       shell.showItemInFolder(data.fileLocation);
       working[uuid].kill();
     } else if (data.status === 'fail') {
-      win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
+      win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 실패', type: 'text' });
       dialog.showErrorBox('에러가 발생했습니다!', `에러 내용: \n${data.error}`);
       // 수정하기 alert 대체
       working[uuid].kill();
@@ -82,6 +83,7 @@ ipcMain.on('download', async (event, arg) => {
 ipcMain.on('download cancel', async (event, arg) => {
   working[arg.uuid].kill();
   win.webContents.send('download progress', { url: arg.url, value: '다운로드 취소됨', type: 'text' });
+  // 삭제 버그 해결
   fs.rm(`./temp/${arg.info.videoId}`, { force: true, recursive: true });
 });
 
@@ -99,11 +101,12 @@ ipcMain.on('private download', async (event, arg) => {
   working[uuid].send(stringify({ arg, uuid }));
   working[uuid].on('message', (data) => {
     if (data.status === 'ok') {
+      win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 완료!', type: 'text' });
       new Notification({ title: '다운로드 완료!', body: `${data.filename}의 다운로드가 완료되었습니다!` }).show();
       shell.showItemInFolder(data.fileLocation);
       working[uuid].kill();
     } else if (data.status === 'fail') {
-      win.webContents.send('download progress', { url: data.url, value: '다운로드 실패', type: 'text' });
+      win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 실패', type: 'text' });
       dialog.showErrorBox('에러가 발생했습니다!', `에러 내용: \n${data.error}`);
       // 수정하기 alert 대체
       working[uuid].kill();

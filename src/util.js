@@ -121,6 +121,10 @@ async function getDownloadableURLFromHeadless(videoId, quality, type, cookie) {
     if (type === 'video') {
       if (videoURL !== '' && audioURL !== '') readyToGo = true;
     }
+
+    if (type === 'audio') {
+      if (audioURL !== '') readyToGo = true;
+    }
   });
 
   await page.goto(`https://www.youtube.com/watch?v=${videoId}`);

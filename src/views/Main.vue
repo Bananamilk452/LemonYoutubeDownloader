@@ -29,7 +29,7 @@ export default {
     });
 
     this.$ipcRenderer.on('download progress', (data) => {
-      this.list[this.list.findIndex((x) => x.url === data.url)].progress = data;
+      this.list[this.list.findIndex((x) => x.uuid === data.uuid)].progress = data;
     });
     // TODO: 파일 폴더 열기 버튼
   },
@@ -54,7 +54,7 @@ export default {
 #main(v-if="status")
   Navbar
   #result
-    .search-card(v-for="data in list" :key="data.url")
+    .search-card(v-for="data in list" :key="data.uuid")
       .search-image(style="width:20%;")
         img.search-thumbnail(:src="getThumbnail(data.info)")
         .search-thumbnail-time {{ parseTime(data.info.lengthSeconds) }}
@@ -71,7 +71,7 @@ export default {
       .notice-title 유튜브 링크를 복사하고 "링크 분석" 버튼을 누르거나 영상 검색 버튼을 눌러서 검색 후 영상을 다운로드하세요!
       .notice-anchor(@click="$openBrowser('https://github.com/Bananamilk452/LemonYoutubeDownloader/issues/new')") 버그 제보하기
     .version 버전 {{ $version }}
-      a.update(href="https://github.com/Bananamilk452/LemonYoutubeDownloader/releases/latest") 업데이트 확인
+      a.update(@click="$openBrowser('https://github.com/Bananamilk452/LemonYoutubeDownloader/releases/latest')") 업데이트 확인
     //- // TODO: 업데이트 확인 중이나 업데이트 다운로드 중 표시하기
 .dimmer(v-else)
   p 초기 설치 중입니다. 응답 없음이 30초 이상 뜰 수 있습니다. 잠시만요...

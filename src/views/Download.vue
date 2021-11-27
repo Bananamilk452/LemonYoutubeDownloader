@@ -76,6 +76,9 @@ export default {
       this.progress = '정보 수집 중...';
     },
     youtubeLinkParse(link) {
+      // TODO: 이 링크 작동안함
+      // https://www.youtube.com/watch?reload=9&v=SEKB7DTsFz8
+
       const regex = /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/;
       const result = link.match(regex);
       if (result === null) return { match: false, value: link };
@@ -98,7 +101,7 @@ export default {
         this.$ipcRenderer.send('download', { ...o, url, info: this.data.videoDetails });
         window.close();
       } else if (o.type === 'audio') {
-        this.$ipcRenderer.send('download audio', { ...o, url, info: this.data.videoDetails });
+        this.$ipcRenderer.send('download', { ...o, url, info: this.data.videoDetails });
         window.close();
       }
     },
