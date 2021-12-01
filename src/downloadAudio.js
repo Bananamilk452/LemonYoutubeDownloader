@@ -3,12 +3,13 @@ const asyncPool = require('tiny-async-pool');
 const fs = require('fs').promises;
 const axios = require('axios');
 const { homedir } = require('os');
+const logger = require('electron-log');
 const { parse } = require('flatted');
 const {
   checkDirectory, concatFiles, downloadPart, getDownloadableURLFromHeadless, currentProgress, dividePart, clearPartFile, clearAndCreateTempFolder,
 } = require('./util');
 
-async function downloadAudio(arg, uuid) {
+async function downloadAudio(arg, uuid, setting) {
   return new Promise((resolve, reject) => {
     (async () => {
       try {
@@ -65,29 +66,36 @@ async function downloadAudio(arg, uuid) {
 
         console.log(`[${videoId}] Concating downloaded part files...`);
         process.send({ title: 'download progress', data: { uuid, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
-        await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.ogg'), 'audio');
+
+        const tempAudioFile = join(tempFolder, `audio.${setting.audiotype}`);
+
+        await concatFiles(audioPart.length, tempFolder, tempAudioFile, 'audio');
 
         clearPartFile(0, audioPart.length, tempFolder);
         console.log(`[${videoId}] Audio merged successfully.`);
-        const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
 
-        // TODO: 같은 파일이 있으면 딜레이 길어짐, 파일 핸들이 망가짐
-        await fs.copyFile(join(tempFolder, 'audio.ogg'), join(saveDirectory, `${filename}.ogg`));
+        const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
+        const destination = join(saveDirectory, `[${new Date().valueOf()}]-${filename}.${setting.audiotype}`);
+
+        await fs.copyFile(tempAudioFile, destination);
 
         fs.rm(tempFolder, { recursive: true, force: true });
-        resolve({ filename, fileLocation: join(saveDirectory, `${filename}.ogg`) });
+        resolve({ title: arg.info.title, filename, fileLocation: destination });
       } catch (err) {
-        reject(err);
+        reject(err.message);
       }
     })();
   });
 }
 
 process.on('message', async (data) => {
-  const { arg, uuid } = parse(data);
-  await downloadAudio(arg, uuid)
+  const { arg, uuid, setting } = parse(data);
+
+  Object.assign(console, logger.functions);
+
+  await downloadAudio(arg, uuid, JSON.parse(setting))
     .then((res) => {
-      process.send({ status: 'ok', ...res, uuid });
+      process.send({ status: 'ok', ...res });
     })
     .catch((err) => {
       console.log(err);

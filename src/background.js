@@ -50,6 +50,14 @@ async function createWindow() {
   ipcInit(win);
   initInstallScript(win);
 
+  autoUpdater.on('update-available', () => {
+    win.webContents.send('update status', '최신 버전 다운로드 중...');
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    win.webContents.send('update status', '최신 버전입니다!');
+  });
+
   if (process.argv[2] === 'dev') {
     // Load the url of the dev server if in development mode
     await win.loadURL('http://localhost:8080');

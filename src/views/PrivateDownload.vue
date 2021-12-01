@@ -42,7 +42,6 @@ export default {
   },
   methods: {
     processInput(input, cookie) {
-      // TODO: 에러나면 따로 넣는 곳 만들기
       this.userFailed = false;
       const result = this.youtubeLinkParse(input);
 

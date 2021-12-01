@@ -7,12 +7,13 @@ const { createWriteStream } = require('fs');
 const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const { homedir } = require('os');
+const logger = require('electron-log');
 const { parse } = require('flatted');
 const {
-  checkDirectory, concatFiles, downloadPart, getDownloadableURLFromHeadless, currentProgress, dividePart, clearAndCreateTempFolder,
+  checkDirectory, concatFiles, downloadPart, getDownloadableURLFromHeadless, currentProgress, dividePart, clearAndCreateTempFolder, clearPartFile,
 } = require('./util');
 
-async function downloadVideo(arg, uuid) {
+async function downloadVideo(arg, uuid, setting) {
   return new Promise((resolve, reject) => {
     (async () => {
       try {
@@ -135,16 +136,20 @@ async function downloadVideo(arg, uuid) {
         console.log(`[${videoId}] Concating downloaded part files...`);
         process.send({ title: 'download progress', data: { uuid, value: '다운로드 끝, 파일 합치는 중..', type: 'text' } });
 
-        await concatFiles(count, tempFolder, join(tempFolder, 'video.mkv'), 'video', diff - 1);
-        await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.mkv'), 'audio');
+        const tempVideoFile = join(tempFolder, `video.${setting.videotype}`);
+        const tempAudioFile = join(tempFolder, `audio.${setting.audiotype}`);
+        const tempFinalFile = join(tempFolder, `final.${setting.videotype}`);
 
-        // clearPartFile(videoPart.length, audioPart.length, tempFolder);
+        await concatFiles(count, tempFolder, tempVideoFile, 'video', diff - 1);
+        await concatFiles(audioPart.length, tempFolder, tempAudioFile, 'audio');
+
+        clearPartFile(count, audioPart.length, tempFolder);
 
         ffmpeg.setFfmpegPath('./bin/ffmpeg.exe');
-        ffmpeg(join(tempFolder, 'video.mkv'))
-          .input(join(tempFolder, 'audio.mkv'))
+        ffmpeg(tempVideoFile)
+          .input(tempAudioFile)
           .addOption('-c:v copy')
-          .save(join(tempFolder, 'final.mkv'))
+          .save(tempFinalFile)
           .on('progress', (p) => {
             process.send({
               title: 'download progress',
@@ -155,28 +160,33 @@ async function downloadVideo(arg, uuid) {
           })
           .on('end', async () => {
             console.log(`[${videoId}] Video & Audio merged successfully.`);
-            const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
+            const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
+            const destination = join(saveDirectory, `[${new Date().valueOf()}]-${filename}.${setting.videotype}`);
 
-            await fs.copyFile(join(tempFolder, 'final.mkv'), join(saveDirectory, `${filename}.mkv`));
-            process.send({ title: 'download progress', data: { uuid, value: '다운로드 완료!', type: 'text' } });
+            await fs.copyFile(tempFinalFile, destination);
+
             fs.rm(tempFolder, { recursive: true, force: true });
-            resolve({ filename, fileLocation: join(saveDirectory, `${filename}.mkv`) });
+            resolve({ title: arg.info.title, filename, fileLocation: destination });
           })
           .on('error', (err) => {
             console.log(`an error happened: ${err.message}`);
+            reject(err.message);
           });
       } catch (err) {
-        reject(err);
+        reject(err.message);
       }
     })();
   });
 }
 
 process.on('message', async (data) => {
-  const { arg, uuid } = parse(data);
-  await downloadVideo(arg, uuid)
+  const { arg, uuid, setting } = parse(data);
+
+  Object.assign(console, logger.functions);
+
+  await downloadVideo(arg, uuid, JSON.parse(setting))
     .then((res) => {
-      process.send({ status: 'ok', ...res });
+      process.send({ status: 'ok', ...res, uuid });
     })
     .catch((err) => {
       console.log(err);

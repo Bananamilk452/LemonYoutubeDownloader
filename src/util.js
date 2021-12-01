@@ -221,6 +221,25 @@ function createRandomString() {
   return Math.random().toString(36).substr(2, 5);
 }
 
+async function fetchSettings() {
+  const settingLocation = join(process.env.APPDATA, 'LemonYoutubeDownloader', 'setting.json');
+  const initData = {
+    version: 1,
+    videotype: 'mp4',
+    audiotype: 'mp3',
+  };
+
+  if (existsSync(settingLocation)) {
+    const data = await fs.readFile(settingLocation, { encoding: 'utf8' });
+    console.log('Setting loaded from', settingLocation);
+    return data;
+  }
+  // else
+  await fs.writeFile(settingLocation, JSON.stringify(initData));
+  console.log('Setting not found, creating new ', settingLocation);
+  return JSON.stringify(initData);
+}
+
 module.exports = {
   concatFiles,
   checkDirectory,
@@ -235,4 +254,5 @@ module.exports = {
   getPrivateVideoQuality,
   getPrivateVideoInfo,
   parseCookie,
+  fetchSettings,
 };

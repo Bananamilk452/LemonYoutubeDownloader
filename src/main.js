@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
-  faLink, faSearch, faSlidersH, faRedoAlt, faTimes,
+  faLink, faSearch, faCog, faRedoAlt, faTimes, faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 import { faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -13,10 +13,11 @@ const { version } = require('../package.json');
 
 library.add(faLink);
 library.add(faSearch);
-library.add(faSlidersH);
+library.add(faCog);
 library.add(faRedoAlt);
 library.add(faYoutube);
 library.add(faTimes);
+library.add(faExclamationTriangle);
 
 Vue.component('icon', FontAwesomeIcon);
 

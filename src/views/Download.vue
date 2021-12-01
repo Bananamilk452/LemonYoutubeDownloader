@@ -48,7 +48,6 @@ export default {
       navigator.clipboard.readText()
         .then(async (res) => {
           this.clipboard = res;
-          // TODO: 에러나면 따로 넣는 곳 만들기
           this.processInput(this.clipboard);
         }).catch((e) => {
           console.error(e);
@@ -56,7 +55,6 @@ export default {
         });
     },
     processInput(input) {
-      // TODO: 에러나면 따로 넣는 곳 만들기
       this.userFailed = false;
       const result = this.youtubeLinkParse(input);
 
@@ -79,7 +77,7 @@ export default {
       // TODO: 이 링크 작동안함
       // https://www.youtube.com/watch?reload=9&v=SEKB7DTsFz8
 
-      const regex = /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/;
+      const regex = /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?.*v=)([^#&?]*).*/;
       const result = link.match(regex);
       if (result === null) return { match: false, value: link };
       return { match: true, value: result[1] };

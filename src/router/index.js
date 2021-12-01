@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import Main from '../views/Main.vue';
 import Search from '../views/Search.vue';
 import Download from '../views/Download.vue';
+import Setting from '../views/Setting.vue';
 import PrivateDownload from '../views/PrivateDownload.vue';
 
 Vue.use(VueRouter);
@@ -32,6 +33,11 @@ const routes = [
     path: '/privatedownload',
     name: 'PrivateDownload',
     component: PrivateDownload,
+  },
+  {
+    path: '/setting',
+    name: 'Setting',
+    component: Setting,
   },
 ];
 

@@ -10,7 +10,7 @@ const { existsSync } = require('fs');
 const { fork } = require('child_process');
 const { stringify } = require('flatted');
 const {
-  createRandomString, getQualityFromHeadless, getPrivateVideoQuality, getPrivateVideoInfo,
+  createRandomString, getQualityFromHeadless, getPrivateVideoQuality, getPrivateVideoInfo, fetchSettings,
 } = require('./util');
 
 let win;
@@ -59,10 +59,11 @@ ipcMain.on('getheadless', async (event, arg) => {
 
 ipcMain.on('download', async (event, arg) => {
   const uuid = createRandomString();
-  if (arg.type === 'video') working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadVideo.js' : join(__dirname, 'downloadVideo.js'));
-  else if (arg.type === 'audio') working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadAudio.js' : join(__dirname, 'downloadAudio.js'));
+  if (arg.type === 'video') working[uuid] = fork(join(__dirname, 'downloadVideo.js'));
+  else if (arg.type === 'audio') working[uuid] = fork(join(__dirname, 'downloadAudio.js'));
 
-  working[uuid].send(stringify({ arg, uuid }));
+  working[uuid].send(stringify({ arg, uuid, setting: await fetchSettings() }));
+
   working[uuid].on('message', (data) => {
     if (data.status === 'ok') {
       win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 완료!', type: 'text' });
@@ -72,7 +73,6 @@ ipcMain.on('download', async (event, arg) => {
     } else if (data.status === 'fail') {
       win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 실패', type: 'text' });
       dialog.showErrorBox('에러가 발생했습니다!', `에러 내용: \n${data.error}`);
-      // 수정하기 alert 대체
       working[uuid].kill();
     } else {
       win.webContents.send(data.title, data.data);
@@ -87,6 +87,7 @@ ipcMain.on('download cancel', async (event, arg) => {
   fs.rm(`./temp/${arg.info.videoId}`, { force: true, recursive: true });
 });
 
+// TODO: 합치거나 리팩토링
 ipcMain.on('private getinfo', async (event, arg) => {
   event.reply('private getinfo data', await getPrivateVideoInfo(arg.videoId, arg.cookie));
 });
@@ -97,8 +98,10 @@ ipcMain.on('private getheadless', async (event, arg) => {
 
 ipcMain.on('private download', async (event, arg) => {
   const uuid = createRandomString();
-  working[uuid] = fork(process.argv[2] === 'dev' ? './src/downloadPrivate.js' : join(__dirname, 'downloadPrivate.js'));
-  working[uuid].send(stringify({ arg, uuid }));
+  working[uuid] = fork(join(__dirname, 'downloadPrivate.js'));
+
+  working[uuid].send(stringify({ arg, uuid, setting: await fetchSettings() }));
+
   working[uuid].on('message', (data) => {
     if (data.status === 'ok') {
       win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 완료!', type: 'text' });
@@ -107,8 +110,7 @@ ipcMain.on('private download', async (event, arg) => {
       working[uuid].kill();
     } else if (data.status === 'fail') {
       win.webContents.send('download progress', { uuid: data.uuid, value: '다운로드 실패', type: 'text' });
-      dialog.showErrorBox('에러가 발생했습니다!', `에러 내용: \n${data.error}`);
-      // 수정하기 alert 대체
+      dialog.showErrorBox('에러가 발생했습니다!', `에러 내용: \n${data.error.toString()}`);
       working[uuid].kill();
     } else {
       win.webContents.send(data.title, data.data);
@@ -116,176 +118,12 @@ ipcMain.on('private download', async (event, arg) => {
   });
 });
 
-// #region downloadVideo
-// async function downloadVideo(arg, uuid) {
-//   return new Promise((resolve, reject, onCancel) => {
-//     (async () => {
-//       try {
-//         win.webContents.send('download receive', { ...arg, uuid });
+ipcMain.on('setting fetch', async (event) => {
+  event.reply('setting data', await fetchSettings());
+});
 
-//         const videoId = arg.url.match(/.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/)[1];
-//         const saveDirectory = join(homedir(), 'Videos', 'LemonYoutubeDownloader');
-//         const tempFolder = join('./temp', videoId);
-
-//         await checkDirectory(saveDirectory);
-
-//         console.log(`[${videoId}] Fetching Datas from headless browser...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' });
-//         const { videoURL, audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'video');
-
-//         console.log(`[${videoId}] Fetching content size from url...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '크기 계산 중...', type: 'text' });
-//         const infos = await Promise.all([axios.head(videoURL), axios.head(audioURL)]);
-//         const videoContentLength = Number(infos[0].headers['content-length']);
-//         const audioContentLength = Number(infos[1].headers['content-length']);
-
-//         const splitSize = 10; // Megabyte
-//         const poolCount = 4;
-//         const videoPart = dividePart(splitSize, videoContentLength);
-//         const audioPart = dividePart(2, audioContentLength); // 오디오 다운로드는 끊김현상이 심해서 고정
-
-//         win.webContents.send('download progress', {
-//           url: arg.url, size: videoContentLength + audioContentLength, current: 0, value: '영상과 오디오 다운로드 중...', type: 'progress',
-//         });
-
-//         currentProgress[videoId] = 0;
-
-//         const sendProgress = setInterval(() => {
-//           win.webContents.send('download progress', {
-//             url: arg.url, size: videoContentLength + audioContentLength, current: currentProgress[videoId], value: '영상과 오디오 다운로드 중...', type: 'progress',
-//           });
-//         }, 300);
-
-//         onCancel(() => {
-//           clearInterval(sendProgress);
-//         });
-
-//         await clearAndCreateTempFolder(tempFolder);
-
-//         const videoIndexArray = Array.from(Array(videoPart.length).keys());
-//         const audioIndexArray = Array.from(Array(audioPart.length).keys());
-
-//         const videoConfigs = videoIndexArray.map((x) => ({
-//           index: x, url: videoURL, filename: `temp/${videoId}/video_part_${x}.part`, part: videoPart[x], type: 'video', videoId,
-//         }));
-//         const audioConfigs = audioIndexArray.map((x) => ({
-//           index: x, url: audioURL, filename: `temp/${videoId}/audio_part_${x}.part`, part: audioPart[x], type: 'audio', videoId,
-//         }));
-
-//         console.log(`[${videoId}] Download Started...`);
-//         await Promise.all([asyncPool(poolCount, videoConfigs, downloadPart), asyncPool(poolCount, audioConfigs, downloadPart)]);
-//         clearInterval(sendProgress);
-
-//         console.log(`[${videoId}] Concating downloaded part files...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '다운로드 끝, 파일 합치는 중..', type: 'text' });
-//         await concatFiles(videoPart.length, tempFolder, join(tempFolder, 'video.mkv'), 'video');
-//         await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.mkv'), 'audio');
-
-//         clearPartFile(videoPart.length, audioPart.length, tempFolder);
-
-//         ffmpeg.setFfmpegPath('./bin/ffmpeg.exe');
-//         ffmpeg(join(tempFolder, 'video.mkv'))
-//           .input(join(tempFolder, 'audio.mkv'))
-//           .addOption('-c:v copy')
-//           .save(join(tempFolder, 'final.mkv'))
-//           .on('progress', (progress) => {
-//             win.webContents.send('download progress', {
-//               url: arg.url, size: 10000, current: progress.percent * 100, value: `영상과 오디오 합치는 중... (${progress.currentKbps}Kbps)`, type: 'progress',
-//             });
-//           })
-//           .on('end', async () => {
-//             console.log(`[${videoId}] Video & Audio merged successfully.`);
-//             const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
-
-//             await fs.copyFile(join(tempFolder, 'final.mkv'), join(saveDirectory, `${filename}.mkv`));
-//             resolve();
-//             win.webContents.send('download progress', { url: arg.url, value: '다운로드 완료!', type: 'text' });
-//             new Notification({ title: '다운로드 완료!', body: `${filename}의 다운로드가 완료되었습니다!` }).show();
-//             shell.showItemInFolder(join(saveDirectory, `${filename}.mkv`));
-
-//             fs.rm(tempFolder, { recursive: true, force: true });
-//           })
-//           .on('error', (err) => {
-//             console.log(`an error happened: ${err.message}`);
-//           });
-//       } catch (err) {
-//         reject(err);
-//       }
-//     })();
-//   });
-// }
-// #endregion downloadVideo
-
-// #region downloadAudio
-// async function downloadAudio(arg) {
-//   return new Promise((resolve, reject) => {
-//     (async () => {
-//       try {
-//         win.webContents.send('download receive', arg);
-
-//         const videoId = arg.url.match(/.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/)[1];
-//         const saveDirectory = join(homedir(), 'Videos', 'LemonYoutubeDownloader');
-//         const tempFolder = join('./temp', videoId);
-
-//         await checkDirectory(saveDirectory);
-
-//         console.log(`[${videoId}] Fetching Datas from headless browser...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '헤드리스 브라우저에서 정보 수집 중...', type: 'text' });
-//         const { audioURL } = await getDownloadableURLFromHeadless(videoId, arg.quality, 'audio');
-
-//         console.log(`[${videoId}] Fetching content size from url...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '크기 계산 중...', type: 'text' });
-//         const info = await axios.head(audioURL);
-//         const audioContentLength = Number(info.headers['content-length']);
-
-//         // const splitSize = 50; // Megabyte
-//         const poolCount = 4;
-//         const audioPart = dividePart(1, audioContentLength); // 오디오 다운로드는 끊김현상이 심해서 1MB로 고정
-
-//         win.webContents.send('download progress', {
-//           url: arg.url, size: audioContentLength, current: 0, value: '오디오 다운로드 중...', type: 'progress',
-//         });
-
-//         currentProgress[videoId] = 0;
-
-//         const sendProgress = setInterval(() => {
-//           win.webContents.send('download progress', {
-//             url: arg.url, size: audioContentLength, current: currentProgress[videoId], value: '오디오 다운로드 중...', type: 'progress',
-//           });
-//         }, 300);
-
-//         await clearAndCreateTempFolder(tempFolder);
-
-//         const audioIndexArray = Array.from(Array(audioPart.length).keys());
-
-//         const audioConfigs = audioIndexArray.map((x) => ({
-//           index: x, url: audioURL, filename: `temp/${videoId}/audio_part_${x}.part`, part: audioPart[x], type: 'audio', videoId,
-//         }));
-
-//         console.log(`[${videoId}] Download Started...`);
-//         await asyncPool(poolCount, audioConfigs, downloadPart);
-//         clearInterval(sendProgress);
-
-//         console.log(`[${videoId}] Concating downloaded part files...`);
-//         win.webContents.send('download progress', { url: arg.url, value: '다운로드 끝, 파일 합치는 중..', type: 'text' });
-//         await concatFiles(audioPart.length, tempFolder, join(tempFolder, 'audio.ogg'), 'audio');
-
-//         clearPartFile(0, audioPart.length, tempFolder);
-//         console.log(`[${videoId}] Audio merged successfully.`);
-//         const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, ' ');
-
-//         await fs.copyFile(join(tempFolder, 'audio.ogg'), join(saveDirectory, `${filename}.ogg`));
-
-//         resolve();
-//         win.webContents.send('download progress', { url: arg.url, value: '다운로드 완료!', type: 'text' });
-//         new Notification({ title: '다운로드 완료!', body: `${filename}의 다운로드가 완료되었습니다!` }).show();
-//         shell.showItemInFolder(join(saveDirectory, `${filename}.ogg`));
-
-//         fs.rm(tempFolder, { recursive: true, force: true });
-//       } catch (err) {
-//         reject(err);
-//       }
-//     })();
-//   });
-// }
-// #endregion downloadAudio
+ipcMain.on('setting save', async (event, arg) => {
+  const settingLocation = join(process.env.APPDATA, 'LemonYoutubeDownloader', 'setting.json');
+  await fs.writeFile(settingLocation, arg);
+  console.log('Setting saved');
+});
