@@ -74,7 +74,7 @@ async function downloadAudio(arg, uuid, setting) {
         clearPartFile(0, audioPart.length, tempFolder);
         console.log(`[${videoId}] Audio merged successfully.`);
 
-        const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
+        const filename = arg.info.title.replace(/<|>|:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
         const destination = join(saveDirectory, `[${new Date().valueOf()}]-${filename}.${setting.audiotype}`);
 
         await fs.copyFile(tempAudioFile, destination);

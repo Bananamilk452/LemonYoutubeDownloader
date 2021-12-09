@@ -100,7 +100,7 @@ async function downloadVideo(arg, uuid, setting) {
           })
           .on('end', async () => {
             console.log(`[${videoId}] Video & Audio merged successfully.`);
-            const filename = arg.info.title.replace(/<|>:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
+            const filename = arg.info.title.replace(/<|>|:|"|\/|\\|\||\?|\*|^COM[0-9]$|^LPT[0-9]$|^CON$|^PRN$|^AUX$|^NUL$/gm, '□');
             const destination = join(saveDirectory, `[${new Date().valueOf()}]-${filename}.${setting.videotype}`);
 
             await fs.copyFile(tempFinalFile, destination);
